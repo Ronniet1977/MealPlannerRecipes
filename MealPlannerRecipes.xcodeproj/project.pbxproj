@@ -6,17 +6,44 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		87E1F1B92FA3FE5B00F52A88 /* SavedDinnersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1B22FA3FE5B00F52A88 /* SavedDinnersView.swift */; };
+		87E1F1BA2FA3FE5B00F52A88 /* VideoFrameOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1B42FA3FE5B00F52A88 /* VideoFrameOCRService.swift */; };
+		87E1F1BB2FA3FE5B00F52A88 /* VideoImporterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1B52FA3FE5B00F52A88 /* VideoImporterView.swift */; };
+		87E1F1BC2FA3FE5B00F52A88 /* SavedDinner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1B12FA3FE5B00F52A88 /* SavedDinner.swift */; };
+		87E1F1BD2FA3FE5B00F52A88 /* DinnerDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1A82FA3FE5B00F52A88 /* DinnerDetailView.swift */; };
+		87E1F1BE2FA3FE5B00F52A88 /* DinnerPlannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1A92FA3FE5B00F52A88 /* DinnerPlannerView.swift */; };
+		87E1F1BF2FA3FE5B00F52A88 /* MealPlannerRecipesApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1AD2FA3FE5B00F52A88 /* MealPlannerRecipesApp.swift */; };
+		87E1F1C02FA3FE5B00F52A88 /* OpenAIRecipeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1AE2FA3FE5B00F52A88 /* OpenAIRecipeService.swift */; };
+		87E1F1C12FA3FE5B00F52A88 /* RecipeFullScreenView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1B02FA3FE5B00F52A88 /* RecipeFullScreenView.swift */; };
+		87E1F1C32FA3FE5B00F52A88 /* SpeechTranscriber.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1B32FA3FE5B00F52A88 /* SpeechTranscriber.swift */; };
+		87E1F1C42FA3FE5B00F52A88 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1A72FA3FE5B00F52A88 /* ContentView.swift */; };
+		87E1F1C52FA3FE5B00F52A88 /* DinnerStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1AA2FA3FE5B00F52A88 /* DinnerStore.swift */; };
+		87E1F1C62FA3FE5B00F52A88 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87E1F1A62FA3FE5B00F52A88 /* Assets.xcassets */; };
+		87E1F1C92FA3FFA400F52A88 /* RecipeCleaner.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1C82FA3FF9400F52A88 /* RecipeCleaner.swift */; };
+		87E1F1CB2FA3FFC600F52A88 /* EditRecipeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1CA2FA3FFC100F52A88 /* EditRecipeView.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		87321E312FA341AF00958092 /* MealPlannerRecipes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MealPlannerRecipes.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		87E1F1A62FA3FE5B00F52A88 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		87E1F1A72FA3FE5B00F52A88 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		87E1F1A82FA3FE5B00F52A88 /* DinnerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinnerDetailView.swift; sourceTree = "<group>"; };
+		87E1F1A92FA3FE5B00F52A88 /* DinnerPlannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinnerPlannerView.swift; sourceTree = "<group>"; };
+		87E1F1AA2FA3FE5B00F52A88 /* DinnerStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinnerStore.swift; sourceTree = "<group>"; };
+		87E1F1AC2FA3FE5B00F52A88 /* MealPlannerRecipes.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; path = MealPlannerRecipes.xcodeproj; sourceTree = "<group>"; };
+		87E1F1AD2FA3FE5B00F52A88 /* MealPlannerRecipesApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MealPlannerRecipesApp.swift; sourceTree = "<group>"; };
+		87E1F1AE2FA3FE5B00F52A88 /* OpenAIRecipeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAIRecipeService.swift; sourceTree = "<group>"; };
+		87E1F1B02FA3FE5B00F52A88 /* RecipeFullScreenView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeFullScreenView.swift; sourceTree = "<group>"; };
+		87E1F1B12FA3FE5B00F52A88 /* SavedDinner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedDinner.swift; sourceTree = "<group>"; };
+		87E1F1B22FA3FE5B00F52A88 /* SavedDinnersView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedDinnersView.swift; sourceTree = "<group>"; };
+		87E1F1B32FA3FE5B00F52A88 /* SpeechTranscriber.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechTranscriber.swift; sourceTree = "<group>"; };
+		87E1F1B42FA3FE5B00F52A88 /* VideoFrameOCRService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoFrameOCRService.swift; sourceTree = "<group>"; };
+		87E1F1B52FA3FE5B00F52A88 /* VideoImporterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VideoImporterView.swift; sourceTree = "<group>"; };
+		87E1F1C72FA3FE5D00F52A88 /* MealPlannerRecipes-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "MealPlannerRecipes-Bridging-Header.h"; sourceTree = "<group>"; };
+		87E1F1C82FA3FF9400F52A88 /* RecipeCleaner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecipeCleaner.swift; sourceTree = "<group>"; };
+		87E1F1CA2FA3FFC100F52A88 /* EditRecipeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditRecipeView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
-
-/* Begin PBXFileSystemSynchronizedRootGroup section */
-		87321E332FA341AF00958092 /* MealPlannerRecipes */ = {
-			isa = PBXFileSystemSynchronizedRootGroup;
-			path = MealPlannerRecipes;
-			sourceTree = "<group>";
-		};
-/* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		87321E2E2FA341AF00958092 /* Frameworks */ = {
@@ -32,8 +59,24 @@
 		87321E282FA341AF00958092 = {
 			isa = PBXGroup;
 			children = (
-				87321E332FA341AF00958092 /* MealPlannerRecipes */,
+				87E1F1CA2FA3FFC100F52A88 /* EditRecipeView.swift */,
+				87E1F1C82FA3FF9400F52A88 /* RecipeCleaner.swift */,
+				87E1F1AC2FA3FE5B00F52A88 /* MealPlannerRecipes.xcodeproj */,
+				87E1F1A62FA3FE5B00F52A88 /* Assets.xcassets */,
+				87E1F1A72FA3FE5B00F52A88 /* ContentView.swift */,
+				87E1F1A82FA3FE5B00F52A88 /* DinnerDetailView.swift */,
+				87E1F1A92FA3FE5B00F52A88 /* DinnerPlannerView.swift */,
+				87E1F1AA2FA3FE5B00F52A88 /* DinnerStore.swift */,
+				87E1F1AD2FA3FE5B00F52A88 /* MealPlannerRecipesApp.swift */,
+				87E1F1AE2FA3FE5B00F52A88 /* OpenAIRecipeService.swift */,
+				87E1F1B02FA3FE5B00F52A88 /* RecipeFullScreenView.swift */,
+				87E1F1B12FA3FE5B00F52A88 /* SavedDinner.swift */,
+				87E1F1B22FA3FE5B00F52A88 /* SavedDinnersView.swift */,
+				87E1F1B32FA3FE5B00F52A88 /* SpeechTranscriber.swift */,
+				87E1F1B42FA3FE5B00F52A88 /* VideoFrameOCRService.swift */,
+				87E1F1B52FA3FE5B00F52A88 /* VideoImporterView.swift */,
 				87321E322FA341AF00958092 /* Products */,
+				87E1F1C72FA3FE5D00F52A88 /* MealPlannerRecipes-Bridging-Header.h */,
 			);
 			sourceTree = "<group>";
 		};
@@ -60,9 +103,6 @@
 			);
 			dependencies = (
 			);
-			fileSystemSynchronizedGroups = (
-				87321E332FA341AF00958092 /* MealPlannerRecipes */,
-			);
 			name = MealPlannerRecipes;
 			packageProductDependencies = (
 			);
@@ -82,6 +122,7 @@
 				TargetAttributes = {
 					87321E302FA341AF00958092 = {
 						CreatedOnToolsVersion = 26.4.1;
+						LastSwiftMigration = 2640;
 					};
 				};
 			};
@@ -109,6 +150,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				87E1F1C62FA3FE5B00F52A88 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -119,6 +161,20 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				87E1F1B92FA3FE5B00F52A88 /* SavedDinnersView.swift in Sources */,
+				87E1F1BA2FA3FE5B00F52A88 /* VideoFrameOCRService.swift in Sources */,
+				87E1F1BB2FA3FE5B00F52A88 /* VideoImporterView.swift in Sources */,
+				87E1F1BC2FA3FE5B00F52A88 /* SavedDinner.swift in Sources */,
+				87E1F1BD2FA3FE5B00F52A88 /* DinnerDetailView.swift in Sources */,
+				87E1F1BE2FA3FE5B00F52A88 /* DinnerPlannerView.swift in Sources */,
+				87E1F1CB2FA3FFC600F52A88 /* EditRecipeView.swift in Sources */,
+				87E1F1BF2FA3FE5B00F52A88 /* MealPlannerRecipesApp.swift in Sources */,
+				87E1F1C92FA3FFA400F52A88 /* RecipeCleaner.swift in Sources */,
+				87E1F1C02FA3FE5B00F52A88 /* OpenAIRecipeService.swift in Sources */,
+				87E1F1C12FA3FE5B00F52A88 /* RecipeFullScreenView.swift in Sources */,
+				87E1F1C32FA3FE5B00F52A88 /* SpeechTranscriber.swift in Sources */,
+				87E1F1C42FA3FE5B00F52A88 /* ContentView.swift in Sources */,
+				87E1F1C52FA3FE5B00F52A88 /* DinnerStore.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -251,6 +307,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5FA3W32A75;
@@ -272,6 +329,8 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "MealPlannerRecipes-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -283,6 +342,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 5FA3W32A75;
@@ -304,6 +364,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "MealPlannerRecipes-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
