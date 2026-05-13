@@ -4,8 +4,10 @@ import Vision
 import UIKit
 
 final class VideoFrameOCRService {
-    
-    func extractTextFromVideo(url: URL) async throws -> String {
+
+    nonisolated init() {}
+
+    nonisolated func extractTextFromVideo(url: URL) async throws -> String {
         let asset = AVURLAsset(url: url)
         let generator = AVAssetImageGenerator(asset: asset)
         generator.appliesPreferredTrackTransform = true
@@ -48,7 +50,7 @@ final class VideoFrameOCRService {
         return uniqueLines.joined(separator: "\n")
     }
     
-    private func recognizeText(in cgImage: CGImage) async throws -> String {
+    private nonisolated func recognizeText(in cgImage: CGImage) async throws -> String {
         try await withCheckedThrowingContinuation { continuation in
             let request = VNRecognizeTextRequest { request, error in
                 if let error {

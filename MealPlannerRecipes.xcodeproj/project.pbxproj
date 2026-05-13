@@ -324,6 +324,7 @@
 				DEVELOPMENT_TEAM = 5FA3W32A75;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "MealPlannerRecipes asks to delete imported screen recordings from Photos when you choose that cleanup option.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "MealPlannerRecipes uses speech recognition to read spoken recipe instructions from videos you select.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -361,6 +362,7 @@
 				DEVELOPMENT_TEAM = 5FA3W32A75;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "MealPlannerRecipes asks to delete imported screen recordings from Photos when you choose that cleanup option.";
 				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "MealPlannerRecipes uses speech recognition to read spoken recipe instructions from videos you select.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

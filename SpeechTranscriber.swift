@@ -3,8 +3,10 @@ import Speech
 import AVFoundation
 
 final class SpeechTranscriber {
-    
-    func requestPermission() async -> Bool {
+
+    nonisolated init() {}
+
+    nonisolated func requestPermission() async -> Bool {
         await withCheckedContinuation { continuation in
             SFSpeechRecognizer.requestAuthorization { status in
                 continuation.resume(returning: status == .authorized)
@@ -12,7 +14,7 @@ final class SpeechTranscriber {
         }
     }
     
-    func transcribeVideo(url: URL) async throws -> String {
+    nonisolated func transcribeVideo(url: URL) async throws -> String {
         let allowed = await requestPermission()
         guard allowed else {
             throw NSError(
@@ -26,7 +28,7 @@ final class SpeechTranscriber {
         return try await transcribeAudio(url: audioURL)
     }
     
-    private func extractAudio(from videoURL: URL) async throws -> URL {
+    private nonisolated func extractAudio(from videoURL: URL) async throws -> URL {
         let asset = AVURLAsset(url: videoURL)
         
         let outputURL = FileManager.default.temporaryDirectory
@@ -59,7 +61,7 @@ final class SpeechTranscriber {
         }
     }
     
-    private func transcribeAudio(url: URL) async throws -> String {
+    private nonisolated func transcribeAudio(url: URL) async throws -> String {
         guard let recognizer = SFSpeechRecognizer(locale: Locale(identifier: "en-US")) else {
             throw NSError(
                 domain: "SpeechTranscriber",
