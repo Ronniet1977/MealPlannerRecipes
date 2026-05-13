@@ -18,7 +18,6 @@ struct VideoImporterView: View {
     @State private var manualText = ""
     @State private var showPasteSheet = false
     
-    private let ocrService = VideoFrameOCRService()
     private let recipeCleaner = RecipeCleaner()
     
     var body: some View {
@@ -61,7 +60,7 @@ struct VideoImporterView: View {
                         .foregroundColor(.blue)
                         .multilineTextAlignment(.center)
                     
-                    Button(isScanning ? "Scanning..." : "Scan Video Text") {
+                    Button(isScanning ? "Scanning..." : "Scan Video") {
                         scanVideo(url: url)
                     }
                     .buttonStyle(.bordered)
@@ -77,7 +76,7 @@ struct VideoImporterView: View {
                 }
                 
                 if isScanning {
-                    ProgressView("Scanning video...")
+                    ProgressView("Scanning video text and speech...")
                 }
                 
                 if isBuildingRecipe {
@@ -113,7 +112,7 @@ struct VideoImporterView: View {
         }
         .fileImporter(
             isPresented: $showFileImporter,
-            allowedContentTypes: [.movie, .mpeg4Movie, .quickTimeMovie],
+            allowedContentTypes: [.video, .movie, .mpeg4Movie, .quickTimeMovie, .audiovisualContent],
             allowsMultipleSelection: false
         ) { result in
             handleFileImport(result)
@@ -320,18 +319,51 @@ struct VideoImporterView: View {
         savedMessage = ""
         
         Task {
-            do {
-                let text = try await ocrService.extractTextFromVideo(url: url)
-                await MainActor.run {
-                    extractedText = text.isEmpty ? "No readable text found." : text
-                    isScanning = false
-                }
-            } catch {
-                await MainActor.run {
-                    extractedText = "Scan error: \(error.localizedDescription)"
-                    isScanning = false
-                }
+            async let ocrText = readVideoText(url: url)
+            async let transcriptText = readVideoTranscript(url: url)
+
+            let textParts = await [ocrText, transcriptText]
+                .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                .filter { !$0.isEmpty }
+
+            await MainActor.run {
+                extractedText = textParts.isEmpty ? "No readable text or speech found." : textParts.joined(separator: "\n\n")
+                isScanning = false
             }
+        }
+    }
+
+    private nonisolated func readVideoText(url: URL) async -> String {
+        do {
+            let ocrService = VideoFrameOCRService()
+            let text = try await ocrService.extractTextFromVideo(url: url)
+            guard !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                return ""
+            }
+
+            return """
+            On-screen text:
+            \(text)
+            """
+        } catch {
+            return ""
+        }
+    }
+
+    private nonisolated func readVideoTranscript(url: URL) async -> String {
+        do {
+            let speechTranscriber = SpeechTranscriber()
+            let transcript = try await speechTranscriber.transcribeVideo(url: url)
+            guard !transcript.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
+                return ""
+            }
+
+            return """
+            Spoken transcript:
+            \(transcript)
+            """
+        } catch {
+            return ""
         }
     }
     
@@ -450,7 +482,7 @@ struct MovieTransfer: Transferable {
     let url: URL
     
     static var transferRepresentation: some TransferRepresentation {
-        FileRepresentation(contentType: .movie) { movie in
+        FileRepresentation(contentType: .video) { movie in
             SentTransferredFile(movie.url)
         } importing: { received in
             let copy = FileManager.default.temporaryDirectory

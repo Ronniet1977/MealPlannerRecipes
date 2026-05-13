@@ -78,28 +78,20 @@ SPEECH TRANSCRIPT:
             }
             
             if let output = json["output"] as? [[String: Any]] {
+                var allText: [String] = []
+
                 for item in output {
                     if let content = item["content"] as? [[String: Any]] {
                         for part in content {
-                            var allText: [String] = []
-                            
-                            if let output = json["output"] as? [[String: Any]] {
-                                for item in output {
-                                    if let content = item["content"] as? [[String: Any]] {
-                                        for part in content {
-                                            if let text = part["text"] as? String {
-                                                allText.append(text)
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                            
-                            if !allText.isEmpty {
-                                return allText.joined(separator: "\n")
+                            if let text = part["text"] as? String {
+                                allText.append(text)
                             }
                         }
                     }
+                }
+
+                if !allText.isEmpty {
+                    return allText.joined(separator: "\n")
                 }
             }
             

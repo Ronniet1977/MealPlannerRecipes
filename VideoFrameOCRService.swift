@@ -20,8 +20,8 @@ final class VideoFrameOCRService {
         }
         
         for time in frameTimes {
-            if let image = try? generator.copyCGImage(at: time, actualTime: nil) {
-                let text = try await recognizeText(in: image)
+            if let frame = try? await generator.image(at: time) {
+                let text = try await recognizeText(in: frame.image)
                 if !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
                     allText.append(text)
                 }

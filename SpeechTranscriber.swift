@@ -44,18 +44,17 @@ final class SpeechTranscriber {
             )
         }
         
-        exportSession.outputURL = outputURL
-        exportSession.outputFileType = .m4a
-        
-        await exportSession.export()
-        
-        if exportSession.status == .completed {
+        do {
+            try await exportSession.export(to: outputURL, as: .m4a)
             return outputURL
-        } else {
-            throw exportSession.error ?? NSError(
+        } catch {
+            throw NSError(
                 domain: "SpeechTranscriber",
                 code: 3,
-                userInfo: [NSLocalizedDescriptionKey: "Audio export failed."]
+                userInfo: [
+                    NSLocalizedDescriptionKey: "Audio export failed.",
+                    NSUnderlyingErrorKey: error
+                ]
             )
         }
     }
@@ -86,4 +85,3 @@ final class SpeechTranscriber {
         }
     }
 }
-
