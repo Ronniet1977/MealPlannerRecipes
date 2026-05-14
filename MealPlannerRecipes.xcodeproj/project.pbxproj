@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		877F07222FB559FA0066B632 /* AppleRecipeService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 877F07212FB559FA0066B632 /* AppleRecipeService.swift */; };
 		87E1F1B92FA3FE5B00F52A88 /* SavedDinnersView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1B22FA3FE5B00F52A88 /* SavedDinnersView.swift */; };
 		87E1F1BA2FA3FE5B00F52A88 /* VideoFrameOCRService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1B42FA3FE5B00F52A88 /* VideoFrameOCRService.swift */; };
 		87E1F1BB2FA3FE5B00F52A88 /* VideoImporterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87E1F1B52FA3FE5B00F52A88 /* VideoImporterView.swift */; };
@@ -26,6 +27,7 @@
 
 /* Begin PBXFileReference section */
 		87321E312FA341AF00958092 /* MealPlannerRecipes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MealPlannerRecipes.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		877F07212FB559FA0066B632 /* AppleRecipeService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleRecipeService.swift; sourceTree = "<group>"; };
 		87E1F1A62FA3FE5B00F52A88 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		87E1F1A72FA3FE5B00F52A88 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		87E1F1A82FA3FE5B00F52A88 /* DinnerDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinnerDetailView.swift; sourceTree = "<group>"; };
@@ -59,6 +61,7 @@
 		87321E282FA341AF00958092 = {
 			isa = PBXGroup;
 			children = (
+				877F07212FB559FA0066B632 /* AppleRecipeService.swift */,
 				87E1F1CA2FA3FFC100F52A88 /* EditRecipeView.swift */,
 				87E1F1C82FA3FF9400F52A88 /* RecipeCleaner.swift */,
 				87E1F1AC2FA3FE5B00F52A88 /* MealPlannerRecipes.xcodeproj */,
@@ -186,6 +189,7 @@
 				87E1F1C32FA3FE5B00F52A88 /* SpeechTranscriber.swift in Sources */,
 				87E1F1C42FA3FE5B00F52A88 /* ContentView.swift in Sources */,
 				87E1F1C52FA3FE5B00F52A88 /* DinnerStore.swift in Sources */,
+				877F07222FB559FA0066B632 /* AppleRecipeService.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
