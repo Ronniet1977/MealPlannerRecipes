@@ -338,8 +338,8 @@ struct VideoImporterView: View {
         Task {
             do {
                 if #available(iOS 26.0, *) {
-                    let appleService = AppleRecipeService()
-                    let result = try await appleService.makeRecipe(from: extractedText)
+                    let service = AppleRecipeService()
+                    let result = try await service.makeRecipe(from: extractedText)
                     
                     await MainActor.run {
                         recipeOutput = result
@@ -353,7 +353,6 @@ struct VideoImporterView: View {
                         isBuildingRecipe = false
                     }
                 }
-                
             } catch {
                 let fallback = await recipeCleaner.cleanRecipe(from: extractedText)
                 
