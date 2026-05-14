@@ -2,6 +2,7 @@ import SwiftUI
 
 struct RecipeFullScreenView: View {
     
+    
     let recipe: String
     @Environment(\.dismiss) private var dismiss
     @State private var checkedItems: Set<String> = []
@@ -79,17 +80,22 @@ struct RecipeFullScreenView: View {
             Divider()
             
             HStack {
-                Button("Copy List") {
-                    copyList()
+                Button("Copy Selected") {
+                    UIPasteboard.general.string = selectedGroceryText()
                 }
                 
                 Spacer()
                 
-                Button("Share") {
-                    shareList()
+                ShareLink(
+                    item: selectedGroceryText()
+                ) {
+                    Label("Share Selected", systemImage: "square.and.arrow.up")
                 }
             }
             .padding()
+        }
+        .onDisappear {
+            checkedItems.removeAll()
         }
     }
     
@@ -101,23 +107,22 @@ struct RecipeFullScreenView: View {
         }
     }
     
-    private func copyList() {
-        let list = ingredients.joined(separator: "\n")
-        UIPasteboard.general.string = list
+    private func selectedGroceryText() -> String {
+        let selected = ingredients.filter { checkedItems.contains($0) }
+        
+        let items = selected
+            .map { "• \($0)" }
+            .joined(separator: "\n")
+        
+        return """
+    Grocery List
+    
+    \(items.isEmpty ? "No items selected." : items)
+    """
     }
     
-    private func shareList() {
-        let list = ingredients.joined(separator: "\n")
-        
-        let activityVC = UIActivityViewController(
-            activityItems: [list],
-            applicationActivities: nil
-        )
-        
-        if let scene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
-           let root = scene.windows.first?.rootViewController {
-            root.present(activityVC, animated: true)
-        }
+    private func copyList() {
+        UIPasteboard.general.string = selectedGroceryText()
     }
     
     private func extractSection(named sectionName: String) -> [String] {
@@ -144,4 +149,14 @@ struct RecipeFullScreenView: View {
         
         return sectionLines
     }
+}
+
+struct ShareSheet: UIViewControllerRepresentable {
+    let items: [Any]
+    
+    func makeUIViewController(context: Context) -> UIActivityViewController {
+        UIActivityViewController(activityItems: items, applicationActivities: nil)
+    }
+    
+    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }

@@ -22,70 +22,68 @@ struct VideoImporterView: View {
     @State private var showDeleteRecordingConfirmation = false
     @State private var selectedPhotoAssetIdentifier: String?
     @State private var importMessage = ""
+    
+    @State private var showVideoSourceDialog = false
 
     private let recipeCleaner = RecipeCleaner()
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
-
-                Menu {
-                    Button {
-                        showPhotoPicker = true
-                    } label: {
-                        Label("From Photos", systemImage: "photo")
-                    }
-
-                    Button {
-                        showFileImporter = true
-                    } label: {
-                        Label("From Files", systemImage: "folder")
-                    }
-                } label: {
+                
+                PhotosPicker(
+                    selection: $selectedItem,
+                    matching: .videos,
+                    photoLibrary: .shared()
+                ) {
                     Label("Select Video", systemImage: "video")
                 }
                 .buttonStyle(.borderedProminent)
-
+                
                 Button {
                     showReelHelp = true
                 } label: {
                     Label("Using a Reel?", systemImage: "record.circle")
                 }
                 .buttonStyle(.bordered)
-
+                
                 Button("Paste Recipe Text") {
                     showPasteSheet = true
                 }
                 .buttonStyle(.bordered)
-
+                
                 Button("New Dinner") {
                     resetDinner()
                 }
                 .buttonStyle(.bordered)
                 .foregroundColor(.red)
-
+                
+                if !importMessage.isEmpty {
+                    Text(importMessage)
+                        .font(.footnote)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
+                }
+                
                 if let url = selectedVideoURL {
-                    Text("Selected:")
-                        .font(.headline)
-
+                    Text("✅ Video is selected")
+                        .foregroundColor(.green)
+                    
                     Text(url.lastPathComponent)
                         .foregroundColor(.blue)
                         .multilineTextAlignment(.center)
-
-                    if !importMessage.isEmpty {
-                        Text(importMessage)
-                            .font(.footnote)
-                            .foregroundStyle(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-
+                    
                     Button(isScanning ? "Scanning..." : "Scan Video") {
                         scanVideo(url: url)
                     }
-                    .buttonStyle(.bordered)
+                    .buttonStyle(.borderedProminent)
                     .disabled(isScanning)
+                } else {
+                    Text("❌ selectedVideoURL is nil")
+                        .font(.caption)
+                        .foregroundColor(.red)
                 }
-
+                
                 if !extractedText.isEmpty {
                     Button(isBuildingRecipe ? "Building Recipe..." : "Make Recipe") {
                         makeRecipe()
@@ -93,17 +91,17 @@ struct VideoImporterView: View {
                     .buttonStyle(.borderedProminent)
                     .disabled(isBuildingRecipe || isScanning)
                 }
-
+                
                 if isScanning {
                     ProgressView("Scanning video text and speech...")
                 }
-
+                
                 if isBuildingRecipe {
                     ProgressView("Building recipe...")
                 }
-
+                
                 extractedTextView
-
+                
                 if !recipeOutput.isEmpty {
                     recipeResultView
                 }
@@ -139,20 +137,8 @@ struct VideoImporterView: View {
                 await loadVideo(from: newItem)
             }
         }
-        .photosPicker(
-            isPresented: $showPhotoPicker,
-            selection: $selectedItem,
-            matching: .videos
-        )
         .fullScreenCover(isPresented: $showFullScreen) {
             RecipeFullScreenView(recipe: recipeOutput)
-        }
-        .fileImporter(
-            isPresented: $showFileImporter,
-            allowedContentTypes: [.video, .movie, .mpeg4Movie, .quickTimeMovie, .audiovisualContent],
-            allowsMultipleSelection: false
-        ) { result in
-            handleFileImport(result)
         }
     }
 
@@ -348,13 +334,24 @@ struct VideoImporterView: View {
         isBuildingRecipe = true
         recipeOutput = ""
         savedMessage = ""
-
+        
         Task {
-            let result = await recipeCleaner.cleanRecipe(from: extractedText)
-
-            await MainActor.run {
-                recipeOutput = result
-                isBuildingRecipe = false
+            do {
+                let appleService = AppleRecipeService()
+                let result = try await appleService.makeRecipe(from: extractedText)
+                
+                await MainActor.run {
+                    recipeOutput = result
+                    isBuildingRecipe = false
+                }
+                
+            } catch {
+                let fallback = await recipeCleaner.cleanRecipe(from: extractedText)
+                
+                await MainActor.run {
+                    recipeOutput = fallback
+                    isBuildingRecipe = false
+                }
             }
         }
     }
@@ -383,8 +380,17 @@ struct VideoImporterView: View {
     }
 
     private func loadVideo(from item: PhotosPickerItem?) async {
-        guard let item else { return }
-
+        guard let item else {
+            await MainActor.run {
+                importMessage = "No video item selected."
+            }
+            return
+        }
+        
+        await MainActor.run {
+            importMessage = "Loading video from Photos..."
+        }
+        
         do {
             if let movie = try await item.loadTransferable(type: MovieTransfer.self) {
                 await MainActor.run {
@@ -392,15 +398,20 @@ struct VideoImporterView: View {
                     extractedText = ""
                     recipeOutput = ""
                     savedMessage = ""
-                    importMessage = "Recording imported."
+                    importMessage = "Video ready: \(movie.url.lastPathComponent)"
                     selectedPhotoAssetIdentifier = item.itemIdentifier
                     showDeleteRecordingConfirmation = item.itemIdentifier != nil
                     isScanning = false
                     isBuildingRecipe = false
                 }
+            } else {
+                await MainActor.run {
+                    importMessage = "Could not load video file."
+                }
             }
         } catch {
             await MainActor.run {
+                importMessage = "Video load error: \(error.localizedDescription)"
                 extractedText = "Video load error: \(error.localizedDescription)"
             }
         }
@@ -519,44 +530,55 @@ struct VideoImporterView: View {
             return ""
         }
     }
+    
 
     private func handleFileImport(_ result: Result<[URL], Error>) {
         switch result {
         case .success(let urls):
-            guard let url = urls.first else { return }
-
+            guard let url = urls.first else {
+                importMessage = "No file selected."
+                return
+            }
+            
             let didStartAccessing = url.startAccessingSecurityScopedResource()
-
             defer {
                 if didStartAccessing {
                     url.stopAccessingSecurityScopedResource()
                 }
             }
-
+            
             do {
+                let fileExtension = url.pathExtension.isEmpty ? "mp4" : url.pathExtension
+                
                 let copyURL = FileManager.default.temporaryDirectory
                     .appendingPathComponent(UUID().uuidString)
-                    .appendingPathExtension(url.pathExtension)
-
+                    .appendingPathExtension(fileExtension)
+                
                 if FileManager.default.fileExists(atPath: copyURL.path) {
                     try FileManager.default.removeItem(at: copyURL)
                 }
-
+                
                 try FileManager.default.copyItem(at: url, to: copyURL)
-
-                selectedVideoURL = copyURL
-                extractedText = ""
-                recipeOutput = ""
-                savedMessage = ""
-                importMessage = ""
-                selectedPhotoAssetIdentifier = nil
-                isScanning = false
-                isBuildingRecipe = false
+                
+                Task { @MainActor in
+                    selectedVideoURL = copyURL
+                    extractedText = ""
+                    recipeOutput = ""
+                    savedMessage = ""
+                    importMessage = "Video ready: \(copyURL.lastPathComponent)"
+                    selectedPhotoAssetIdentifier = nil
+                    isScanning = false
+                    isBuildingRecipe = false
+                }
+                
             } catch {
+                
+                importMessage = "File import error: \(error.localizedDescription)"
                 extractedText = "File import error: \(error.localizedDescription)"
             }
-
+            
         case .failure(let error):
+            importMessage = "Import error: \(error.localizedDescription)"
             extractedText = "Import error: \(error.localizedDescription)"
         }
     }
@@ -635,15 +657,21 @@ struct ParsedRecipe {
 
 struct MovieTransfer: Transferable {
     let url: URL
-
+    
     static var transferRepresentation: some TransferRepresentation {
-        FileRepresentation(contentType: .video) { movie in
+        FileRepresentation(contentType: .movie) { movie in
             SentTransferredFile(movie.url)
         } importing: { received in
+            let fileExtension = received.file.pathExtension.isEmpty ? "mp4" : received.file.pathExtension
+            
             let copy = FileManager.default.temporaryDirectory
                 .appendingPathComponent(UUID().uuidString)
-                .appendingPathExtension(received.file.pathExtension)
-
+                .appendingPathExtension(fileExtension)
+            
+            if FileManager.default.fileExists(atPath: copy.path) {
+                try FileManager.default.removeItem(at: copy)
+            }
+            
             try FileManager.default.copyItem(at: received.file, to: copy)
             return MovieTransfer(url: copy)
         }

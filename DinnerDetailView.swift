@@ -8,6 +8,8 @@ struct DinnerDetailView: View {
     @State private var selectedTab = 0
     @State private var cookStepIndex = 0
     
+    @State private var selectedGroceryItems: Set<String> = []
+    
     
     var body: some View {
         VStack {
@@ -49,19 +51,65 @@ struct DinnerDetailView: View {
     }
     
     private var groceryView: some View {
-        List {
-            ForEach(dinner.ingredients, id: \.self) { item in
-                Button {
-                    toggleGrocery(item)
-                } label: {
-                    HStack {
-                        Image(systemName: dinner.checkedGroceryItems.contains(item) ? "checkmark.circle.fill" : "circle")
-                        Text(item)
-                            .strikethrough(dinner.checkedGroceryItems.contains(item))
+        VStack {
+            List {
+                ForEach(dinner.ingredients, id: \.self) { item in
+                    Button {
+                        toggleSelectedGrocery(item)
+                    } label: {
+                        HStack {
+                            Image(systemName: selectedGroceryItems.contains(item) ? "checkmark.circle.fill" : "circle")
+                            
+                            Text(item)
+                                .strikethrough(selectedGroceryItems.contains(item))
+                        }
                     }
                 }
             }
+            
+            Divider()
+            
+            HStack {
+                Button {
+                    UIPasteboard.general.string = selectedGroceryListText()
+                } label: {
+                    Label("Copy Selected", systemImage: "doc.on.doc")
+                }
+                
+                Spacer()
+                
+                ShareLink(
+                    item: selectedGroceryListText()
+                ) {
+                    Label("Share Selected", systemImage: "square.and.arrow.up")
+                }
+            }
+            .padding()
         }
+        .onDisappear {
+            selectedGroceryItems.removeAll()
+        }
+    }
+    
+    private func toggleSelectedGrocery(_ item: String) {
+        if selectedGroceryItems.contains(item) {
+            selectedGroceryItems.remove(item)
+        } else {
+            selectedGroceryItems.insert(item)
+        }
+    }
+    
+    private func selectedGroceryListText() -> String {
+        let items = selectedGroceryItems
+            .sorted()
+            .map { "• \($0)" }
+            .joined(separator: "\n")
+        
+        return """
+    Grocery List for \(dinner.name)
+    
+    \(items.isEmpty ? "No items selected." : items)
+    """
     }
     
     private var cookModeView: some View {
@@ -111,5 +159,19 @@ struct DinnerDetailView: View {
         }
         
         store.update(dinner)
+    }
+    
+    private func groceryListText() -> String {
+        let selectedItems = dinner.checkedGroceryItems
+        
+        let items = selectedItems
+            .map { "• \($0)" }
+            .joined(separator: "\n")
+        
+        return """
+    Grocery List for \(dinner.name)
+    
+    \(items.isEmpty ? "No items selected." : items)
+    """
     }
 }
