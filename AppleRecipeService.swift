@@ -2,6 +2,7 @@ import SwiftUI
 import Foundation
 import FoundationModels
 
+@available(iOS 26.0, *)
 final class AppleRecipeService {
     
     func makeRecipe(from rawText: String) async throws -> String {

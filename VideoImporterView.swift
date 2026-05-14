@@ -337,12 +337,21 @@ struct VideoImporterView: View {
         
         Task {
             do {
-                let appleService = AppleRecipeService()
-                let result = try await appleService.makeRecipe(from: extractedText)
-                
-                await MainActor.run {
-                    recipeOutput = result
-                    isBuildingRecipe = false
+                if #available(iOS 26.0, *) {
+                    let appleService = AppleRecipeService()
+                    let result = try await appleService.makeRecipe(from: extractedText)
+                    
+                    await MainActor.run {
+                        recipeOutput = result
+                        isBuildingRecipe = false
+                    }
+                } else {
+                    let fallback = await recipeCleaner.cleanRecipe(from: extractedText)
+                    
+                    await MainActor.run {
+                        recipeOutput = fallback
+                        isBuildingRecipe = false
+                    }
                 }
                 
             } catch {
