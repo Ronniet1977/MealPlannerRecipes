@@ -5,48 +5,41 @@ struct SavedDinnersView: View {
     @StateObject private var store = DinnerStore()
     @State private var showShareSheet = false
     @State private var shareText = ""
+    @State private var searchText = ""
+    
+    var filteredDinners: [SavedDinner] {
+        if searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            return store.dinners
+        }
+        
+        return store.dinners.filter {
+            $0.name.localizedCaseInsensitiveContains(searchText)
+        }
+    }
+    
+    var favoriteDinners: [SavedDinner] {
+        filteredDinners.filter { $0.isFavorite }
+    }
+    
+    var recentDinners: [SavedDinner] {
+        filteredDinners.filter { !$0.isFavorite }
+    }
     
     var body: some View {
         NavigationStack {
             List {
-                ForEach(store.dinners) { dinner in
-                    NavigationLink {
-                        DinnerDetailView(dinner: dinner, store: store)
-                    } label: {
-                        HStack {
-                            Text(dinner.name)
-                            Spacer()
-                            if dinner.isFavorite {
-                                Image(systemName: "star.fill")
-                                    .foregroundStyle(.yellow)
-                            }
-                        }
-                    }
-                    .swipeActions(edge: .trailing, allowsFullSwipe: false) {
-                        Button {
-                            shareText = groceryText(from: dinner.recipeText)
-                            showShareSheet = true
-                        } label: {
-                            Label("Grocery", systemImage: "cart")
-                        }
-                        .tint(.green)
-                        
-                        Button {
-                            shareText = dinner.recipeText
-                            showShareSheet = true
-                        } label: {
-                            Label("Recipe", systemImage: "square.and.arrow.up")
-                        }
-                        .tint(.blue)
+                if !favoriteDinners.isEmpty {
+                    Section("⭐ Favorites") {
+                        ForEach(favoriteDinners) { dinnerRow($0) }
                     }
                 }
-                .onDelete { indexSet in
-                    for index in indexSet {
-                        store.delete(store.dinners[index])
-                    }
+                
+                Section("Recently Added") {
+                    ForEach(recentDinners) { dinnerRow($0) }
                 }
             }
-            .navigationTitle("Saved Dinners")
+            .navigationTitle("Mom’s Dinners")
+            .searchable(text: $searchText, prompt: "Search chicken, pasta, steak...")
             .toolbar {
                 EditButton()
             }
@@ -58,36 +51,59 @@ struct SavedDinnersView: View {
             }
         }
     }
-    private func groceryText(from recipe: String) -> String {
-        let lines = recipe.components(separatedBy: .newlines)
-        var found = false
-        var items: [String] = []
-        
-        for line in lines {
-            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
-            
-            if trimmed.lowercased().hasPrefix("ingredients:") {
-                found = true
-                continue
-            }
-            
-            if found && trimmed.hasSuffix(":") {
-                break
-            }
-            
-            if found && trimmed.hasPrefix("-") {
-                let item = trimmed
-                    .replacingOccurrences(of: "-", with: "")
-                    .trimmingCharacters(in: .whitespacesAndNewlines)
+    
+    private func dinnerRow(_ dinner: SavedDinner) -> some View {
+        NavigationLink {
+            DinnerDetailView(dinner: dinner, store: store)
+        } label: {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack {
+                    Text(dinner.name)
+                        .font(.headline)
+                        .lineLimit(2)
+                    
+                    Spacer()
+                    
+                    if dinner.isFavorite {
+                        Image(systemName: "star.fill")
+                            .foregroundStyle(.yellow)
+                    }
+                }
                 
-                items.append("• \(item)")
+                Text("\(dinner.ingredients.count) ingredients • \(dinner.instructions.count) steps")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
             }
+            .padding(.vertical, 6)
         }
+        .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button {
+                shareText = groceryText(from: dinner)
+                showShareSheet = true
+            } label: {
+                Label("Grocery", systemImage: "cart")
+            }
+            .tint(.green)
+            
+            Button {
+                shareText = dinner.recipeText
+                showShareSheet = true
+            } label: {
+                Label("Recipe", systemImage: "square.and.arrow.up")
+            }
+            .tint(.blue)
+        }
+    }
+    
+    private func groceryText(from dinner: SavedDinner) -> String {
+        let items = dinner.ingredients
+            .map { "• \($0)" }
+            .joined(separator: "\n")
         
         return """
-    Grocery List
-    
-    \(items.joined(separator: "\n"))
-    """
+        Grocery List for \(dinner.name)
+        
+        \(items.isEmpty ? "No ingredients found." : items)
+        """
     }
 }

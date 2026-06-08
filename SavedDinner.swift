@@ -11,39 +11,34 @@ struct SavedDinner: Identifiable, Codable {
     
     var ingredients: [String] {
         extractSection("Ingredients")
-            .filter { $0.hasPrefix("-") }
-            .map {
-                $0.replacingOccurrences(of: "-", with: "")
-                    .trimmingCharacters(in: .whitespaces)
-            }
+            .map { cleanBullet($0) }
+            .filter { !$0.isEmpty }
+            .filter { !isSectionHeader($0) }
     }
     
     var instructions: [String] {
         extractSection("Instructions")
-            .map {
-                $0.replacingOccurrences(
-                    of: #"^\d+\.\s*"#,
-                    with: "",
-                    options: .regularExpression
-                )
-                .trimmingCharacters(in: .whitespaces)
-            }
+            .map { cleanStep($0) }
+            .filter { !$0.isEmpty }
+            .filter { !isSectionHeader($0) }
     }
     
-    private func extractSection(_ name: String) -> [String] {
+    private func extractSection(_ sectionName: String) -> [String] {
         let lines = recipeText.components(separatedBy: .newlines)
         var found = false
         var result: [String] = []
         
         for line in lines {
-            let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+            let trimmed = cleanMarkdown(line)
+            let lower = trimmed.lowercased()
             
-            if trimmed.lowercased().hasPrefix(name.lowercased() + ":") {
+            if lower == sectionName.lowercased() ||
+                lower == "\(sectionName.lowercased()):" {
                 found = true
                 continue
             }
             
-            if found && trimmed.hasSuffix(":") {
+            if found && isMajorSectionHeader(trimmed) {
                 break
             }
             
@@ -53,5 +48,62 @@ struct SavedDinner: Identifiable, Codable {
         }
         
         return result
+    }
+    
+    private func cleanMarkdown(_ line: String) -> String {
+        var cleaned = line.trimmingCharacters(in: .whitespacesAndNewlines)
+        
+        while cleaned.hasPrefix("#") {
+            cleaned.removeFirst()
+        }
+        
+        cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        cleaned = cleaned.replacingOccurrences(of: "**", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "__", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "`", with: "")
+        
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    private func cleanBullet(_ line: String) -> String {
+        var cleaned = cleanMarkdown(line)
+        
+        while cleaned.hasPrefix("-") || cleaned.hasPrefix("*") || cleaned.hasPrefix("•") {
+            cleaned.removeFirst()
+            cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        
+        return cleaned
+    }
+    
+    private func cleanStep(_ line: String) -> String {
+        var cleaned = cleanMarkdown(line)
+        
+        while cleaned.first?.isNumber == true ||
+                cleaned.hasPrefix(".") ||
+                cleaned.hasPrefix("-") ||
+                cleaned.hasPrefix("*") {
+            cleaned.removeFirst()
+            cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        
+        return cleaned
+    }
+    
+    private func isSectionHeader(_ line: String) -> Bool {
+        let cleaned = cleanMarkdown(line)
+        return cleaned.hasSuffix(":") && cleaned.count < 50
+    }
+    
+    private func isMajorSectionHeader(_ line: String) -> Bool {
+        let lower = cleanMarkdown(line).lowercased()
+        
+        if lower == "instructions" || lower == "instructions:" { return true }
+        if lower == "ingredients" || lower == "ingredients:" { return true }
+        if lower == "cook time" || lower == "cook time:" { return true }
+        if lower == "notes" || lower == "notes:" { return true }
+        if lower == "recipe name" || lower == "recipe name:" { return true }
+        
+        return false
     }
 }

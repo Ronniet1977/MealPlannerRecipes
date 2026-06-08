@@ -23,40 +23,68 @@ struct VideoImporterView: View {
     @State private var selectedPhotoAssetIdentifier: String?
     @State private var importMessage = ""
     
-    @State private var showVideoSourceDialog = false
+    @State private var showVideoFinishedAlert = false
 
     private let recipeCleaner = RecipeCleaner()
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 20) {
+            VStack(spacing: 22) {
                 
-                PhotosPicker(
-                    selection: $selectedItem,
-                    matching: .videos,
-                    photoLibrary: .shared()
-                ) {
-                    Label("Select Video", systemImage: "video")
+                VStack(spacing: 8) {
+                    Image(systemName: "fork.knife.circle.fill")
+                        .font(.system(size: 58))
+                        .foregroundStyle(.purple)
+                    
+                    Text("Recipe Catcher")
+                        .font(.largeTitle.bold())
+                    
+                    Text("Turn saved recipe videos into dinners, grocery lists, and cook steps.")
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
+                        .multilineTextAlignment(.center)
                 }
-                .buttonStyle(.borderedProminent)
+                .padding(.top, 20)
                 
-                Button {
-                    showReelHelp = true
-                } label: {
-                    Label("Using a Reel?", systemImage: "record.circle")
+                VStack(spacing: 14) {
+                    PhotosPicker(
+                        selection: $selectedItem,
+                        matching: .videos,
+                        photoLibrary: .shared()
+                    ) {
+                        Label("Choose Recipe Video", systemImage: "video.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.borderedProminent)
+                    
+                    Button {
+                        showReelHelp = true
+                    } label: {
+                        Label("Using TikTok or Facebook?", systemImage: "heart.circle.fill")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    
+                    Button {
+                        showPasteSheet = true
+                    } label: {
+                        Label("Paste Recipe Text", systemImage: "doc.on.clipboard")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    
+                    Button {
+                        resetDinner()
+                    } label: {
+                        Label("Start New Dinner", systemImage: "sparkles")
+                            .frame(maxWidth: .infinity)
+                    }
+                    .buttonStyle(.bordered)
+                    .tint(.pink)
                 }
-                .buttonStyle(.bordered)
-                
-                Button("Paste Recipe Text") {
-                    showPasteSheet = true
-                }
-                .buttonStyle(.bordered)
-                
-                Button("New Dinner") {
-                    resetDinner()
-                }
-                .buttonStyle(.bordered)
-                .foregroundColor(.red)
+                .padding()
+                .background(.thinMaterial)
+                .clipShape(RoundedRectangle(cornerRadius: 24))
                 
                 if !importMessage.isEmpty {
                     Text(importMessage)
@@ -66,26 +94,29 @@ struct VideoImporterView: View {
                 }
                 
                 if let url = selectedVideoURL {
-                    Text("✅ Video is selected")
-                        .foregroundColor(.green)
-                    
-                    Text(url.lastPathComponent)
-                        .foregroundColor(.blue)
-                        .multilineTextAlignment(.center)
-                    
-                    Button(isScanning ? "Scanning..." : "Scan Video") {
-                        scanVideo(url: url)
+                    VStack(spacing: 12) {
+                        Text("Video Ready")
+                            .font(.headline)
+                            .foregroundStyle(.green)
+                        
+                        Text(url.lastPathComponent)
+                            .font(.caption)
+                            .foregroundStyle(.blue)
+                            .multilineTextAlignment(.center)
+                        
+                        Button(isScanning ? "Scanning..." : "Scan Video") {
+                            scanVideo(url: url)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .disabled(isScanning)
                     }
-                    .buttonStyle(.borderedProminent)
-                    .disabled(isScanning)
-                } else {
-                    Text("❌ selectedVideoURL is nil")
-                        .font(.caption)
-                        .foregroundColor(.red)
+                    .padding()
+                    .background(.thinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 20))
                 }
                 
                 if !extractedText.isEmpty {
-                    Button(isBuildingRecipe ? "Building Recipe..." : "Make Recipe") {
+                    Button(isBuildingRecipe ? "Making Dinner..." : "Make Recipe") {
                         makeRecipe()
                     }
                     .buttonStyle(.borderedProminent)
@@ -93,11 +124,11 @@ struct VideoImporterView: View {
                 }
                 
                 if isScanning {
-                    ProgressView("Scanning video text and speech...")
+                    ProgressView("Reading recipe video...")
                 }
                 
                 if isBuildingRecipe {
-                    ProgressView("Building recipe...")
+                    ProgressView("Creating dinner...")
                 }
                 
                 extractedTextView
@@ -117,25 +148,41 @@ struct VideoImporterView: View {
         .sheet(isPresented: $showReelHelp) {
             reelHelpSheet
         }
-        .confirmationDialog(
-            "Delete the screen recording from Photos?",
-            isPresented: $showDeleteRecordingConfirmation,
-            titleVisibility: .visible
+        .alert(
+            "Recipe Created",
+            isPresented: $showVideoFinishedAlert
         ) {
-            Button("Delete Recording", role: .destructive) {
-                deleteImportedRecording()
-            }
-
-            Button("Keep Recording", role: .cancel) {
+            
+            Button("Keep Video") {
                 importMessage = "Recording kept in Photos."
             }
+            
+            Button("Delete Video", role: .destructive) {
+                deleteImportedRecording()
+            }
+            
         } message: {
-            Text("The app already copied the video for scanning. Delete the original recording from Photos if you only made it for this recipe.")
+            
+            Text("Would you like to keep the original screen recording?")
+            
         }
         .onChange(of: selectedItem) { _, newItem in
             Task {
                 await loadVideo(from: newItem)
             }
+        }
+        .photosPicker(
+            isPresented: $showPhotoPicker,
+            selection: $selectedItem,
+            matching: .videos,
+            photoLibrary: .shared()
+        )
+        .fileImporter(
+            isPresented: $showFileImporter,
+            allowedContentTypes: [.movie, .mpeg4Movie, .quickTimeMovie, .video],
+            allowsMultipleSelection: false
+        ) { result in
+            handleFileImport(result)
         }
         .fullScreenCover(isPresented: $showFullScreen) {
             RecipeFullScreenView(recipe: recipeOutput)
@@ -344,6 +391,10 @@ struct VideoImporterView: View {
                     await MainActor.run {
                         recipeOutput = result
                         isBuildingRecipe = false
+                        
+                        if selectedPhotoAssetIdentifier != nil {
+                            showVideoFinishedAlert = true
+                        }
                     }
                 } else {
                     let fallback = await recipeCleaner.cleanRecipe(from: extractedText)
@@ -382,6 +433,16 @@ struct VideoImporterView: View {
 
         if !parsed.name.isEmpty {
             return parsed.name
+        }
+        
+        let lines = text.components(separatedBy: .newlines)
+        
+        if let firstTitle = lines.first(where: {
+            !$0.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
+        }) {
+            return firstTitle
+                .replacingOccurrences(of: "#", with: "")
+                .trimmingCharacters(in: .whitespacesAndNewlines)
         }
 
         return "Dinner-\(Date().formatted(date: .numeric, time: .shortened))"
@@ -595,6 +656,20 @@ struct VideoImporterView: View {
         var result = ParsedRecipe()
         let lines = text.components(separatedBy: .newlines)
         var currentSection = ""
+        
+        if result.name.isEmpty {
+            for line in lines {
+                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                
+                if trimmed.hasPrefix("#") || trimmed.hasPrefix("**") {
+                    result.name = trimmed
+                        .replacingOccurrences(of: "#", with: "")
+                        .replacingOccurrences(of: "**", with: "")
+                        .trimmingCharacters(in: .whitespacesAndNewlines)
+                    break
+                }
+            }
+        }
 
         for line in lines {
             let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)

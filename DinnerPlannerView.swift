@@ -16,41 +16,38 @@ struct DinnerPlannerView: View {
     
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(days, id: \.self) { day in
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    
+                    VStack(alignment: .leading, spacing: 6) {
+                        
+                        Text("Dinner Planner")
+                            .font(.largeTitle.bold())
+                        
+                        Text("Pick saved dinners or type a simple meal for the week.")
+                            .foregroundStyle(.secondary)
+                    }
+                    
+                    HStack {
+                        
+                        Label("\(plannedCount)", systemImage: "fork.knife")
+                        
+                        Spacer()
+                        
+                        Text("\(7 - plannedCount) days open")
+                            .foregroundStyle(.secondary)
+                    }
+                    .font(.subheadline.bold())
+                    .padding()
+                    .background(.thinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                    
                     ForEach(days, id: \.self) { day in
-                        Section(day) {
-                            Picker("Saved Dinner", selection: savedDinnerBinding(for: day)) {
-                                Text("None").tag(UUID?.none)
-                                
-                                ForEach(store.dinners) { dinner in
-                                    Text(dinner.name).tag(UUID?.some(dinner.id))
-                                }
-                            }
-                            
-                            TextField("Or type manual meal", text: manualMealBinding(for: day))
-                            
-                            if let dinner = dinnerFor(day) {
-                                NavigationLink("View \(dinner.name)") {
-                                    DinnerDetailView(dinner: dinner, store: store)
-                                }
-                            } else if !manualMeal(for: day).isEmpty {
-                                Text("Planned: \(manualMeal(for: day))")
-                                    .foregroundStyle(.secondary)
-                            }
-                        }
-                        .swipeActions(edge: .trailing) {
-                            Button(role: .destructive) {
-                                weeklyPlan[day] = PlannedMeal()
-                                savePlan()
-                            } label: {
-                                Label("Clear", systemImage: "trash")
-                            }
-                        }
+                        dayCard(day)
                     }
                 }
+                .padding(.vertical)
             }
-            .navigationTitle("Dinner Planner")
             .toolbar {
                 Button("Clear") {
                     weeklyPlan = [:]
@@ -62,6 +59,41 @@ struct DinnerPlannerView: View {
                 loadPlan()
             }
         }
+    }
+    
+    private func dayCard(_ day: String) -> some View {
+        VStack(alignment: .leading, spacing: 12) {
+            
+            Text(day)
+                .font(.title3.bold())
+            
+            Picker("Saved Dinner", selection: savedDinnerBinding(for: day)) {
+                Text("No saved dinner").tag(UUID?.none)
+                
+                ForEach(store.dinners) { dinner in
+                    Text(dinner.name).tag(UUID?.some(dinner.id))
+                }
+            }
+            
+            TextField("Or type something simple, like tacos", text: manualMealBinding(for: day))
+                .textFieldStyle(.roundedBorder)
+            
+            if let dinner = dinnerFor(day) {
+                NavigationLink {
+                    DinnerDetailView(dinner: dinner, store: store)
+                } label: {
+                    Label("View \(dinner.name)", systemImage: "fork.knife")
+                        .font(.headline)
+                }
+            } else if !manualMeal(for: day).isEmpty {
+                Label(manualMeal(for: day), systemImage: "pencil")
+                    .foregroundStyle(.secondary)
+            }
+        }
+        .padding()
+        .background(.thinMaterial)
+        .clipShape(RoundedRectangle(cornerRadius: 22))
+        .padding(.horizontal)
     }
     
     private func savedDinnerBinding(for day: String) -> Binding<UUID?> {
@@ -100,6 +132,18 @@ struct DinnerPlannerView: View {
                 savePlan()
             }
         )
+    }
+    
+    private var plannedCount: Int {
+        
+        days.filter { day in
+            
+            let meal = weeklyPlan[day]
+            
+            return meal?.savedDinnerID != nil ||
+            !(meal?.manualMealName ?? "").isEmpty
+        }
+        .count
     }
     
     private func dinnerFor(_ day: String) -> SavedDinner? {

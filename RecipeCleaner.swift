@@ -1,67 +1,62 @@
-//
-//  RecipeCleaner.swift
-//  MealPlannerRecipes
-//
-//  Created by Ronald Thayer Jr on 4/30/26.
-//
-
 import Foundation
 
 final class RecipeCleaner {
-
+    
     func cleanRecipe(from text: String) async -> String {
         basicCleanup(text)
     }
-
+    
     private func basicCleanup(_ text: String) -> String {
         let lines = normalizedLines(from: text)
-
+        
         var recipeName = detectRecipeName(text)
         var ingredients: [String] = []
         var instructions: [String] = []
         var section = ""
-
-        let junkWords = [
-            "app store", "google play", "link in my bio",
-            "save unlimited recipes", "follow", "subscribe",
-            "tiktok", "instagram", "@", "comment", "like", "share"
-        ]
-
-        for line in lines {
+        
+        for rawLine in lines {
+            let line = cleanMarkdown(rawLine)
             let lower = line.lowercased()
-
-            if junkWords.contains(where: { lower.contains($0) }) {
+            
+            if line.isEmpty { continue }
+            
+            if isJunkLine(lower) {
                 continue
             }
-
+            
             if lower.hasPrefix("recipe name") {
                 let name = line
                     .replacingOccurrences(of: "Recipe Name:", with: "")
                     .trimmingCharacters(in: .whitespacesAndNewlines)
-
+                
                 if !name.isEmpty {
                     recipeName = name
                 }
                 continue
             }
-
-            if lower.hasPrefix("ingredients") {
+            
+            if lower == "ingredients" || lower.hasPrefix("ingredients") {
                 section = "ingredients"
                 continue
             }
-
-            if lower.hasPrefix("instructions") || lower.hasPrefix("directions") {
+            
+            if lower == "instructions" || lower == "directions" || lower.hasPrefix("instructions") || lower.hasPrefix("directions") {
                 section = "instructions"
                 continue
             }
-
+            
             if lower.hasPrefix("cook time") || lower.hasPrefix("notes") {
                 section = ""
                 continue
             }
-
+            
             if section == "ingredients" {
-                ingredients.append(cleanIngredient(line))
+                if looksLikeInstruction(lower) {
+                    section = "instructions"
+                    instructions.append(cleanInstruction(line))
+                } else if !isIngredientGroupHeader(line) {
+                    ingredients.append(cleanIngredient(line))
+                }
             } else if section == "instructions" {
                 instructions.append(cleanInstruction(line))
             } else if looksLikeIngredient(lower) {
@@ -70,118 +65,193 @@ final class RecipeCleaner {
                 instructions.append(cleanInstruction(line))
             }
         }
-
-        ingredients = Array(NSOrderedSet(array: ingredients)) as? [String] ?? ingredients
-        instructions = Array(NSOrderedSet(array: instructions)) as? [String] ?? instructions
-
+        
+        ingredients = uniqueClean(ingredients)
+        instructions = uniqueClean(instructions)
+        
         let ingredientText = ingredients.isEmpty
         ? "- Add ingredients manually"
         : ingredients.map { "- \($0)" }.joined(separator: "\n")
-
+        
         let instructionText = instructions.isEmpty
         ? "1. Add instructions manually."
         : instructions.enumerated().map { index, step in
             "\(index + 1). \(step)"
         }.joined(separator: "\n")
-
+        
         return """
         Recipe Name:
         \(recipeName)
-
+        
         Ingredients:
         \(ingredientText)
-
+        
         Instructions:
         \(instructionText)
-
+        
         Cook Time:
         Estimated / add manually
-
+        
         Notes:
         - Cleaned from pasted recipe text or video OCR.
         - Edit before saving if anything looks off.
         """
     }
-
+    
     private func detectRecipeName(_ text: String) -> String {
         let lines = normalizedLines(from: text)
-
-        let keywords = [
-            "pasta", "alfredo", "chicken", "steak", "shrimp",
-            "tacos", "soup", "salad", "burger", "rice",
-            "noodles", "pizza", "casserole", "salmon"
-        ]
-
-        for line in lines.prefix(12) {
+        
+        for rawLine in lines.prefix(15) {
+            let line = cleanMarkdown(rawLine)
             let lower = line.lowercased()
-
-            if keywords.contains(where: { lower.contains($0) }) &&
-                !lower.contains("ingredients") &&
-                !lower.contains("instructions") {
-                return line.capitalized
+            
+            if line.isEmpty { continue }
+            
+            if lower == "ingredients" ||
+                lower == "instructions" ||
+                lower == "directions" ||
+                lower.hasPrefix("recipe name") ||
+                lower.hasPrefix("cook time") ||
+                lower.hasPrefix("notes") {
+                continue
             }
+            
+            if isIngredientGroupHeader(line) {
+                continue
+            }
+            
+            return line.capitalized
         }
-
+        
         return "Quick Dinner"
     }
-
+    
     private func normalizedLines(from text: String) -> [String] {
         text
-            .replacingOccurrences(of: ".", with: ".\n")
-            .replacingOccurrences(of: ", then ", with: "\nThen ", options: .caseInsensitive)
-            .replacingOccurrences(of: " and then ", with: "\nThen ", options: .caseInsensitive)
+            .replacingOccurrences(of: "\r", with: "\n")
             .components(separatedBy: .newlines)
             .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .map { $0.trimmingCharacters(in: CharacterSet(charactersIn: ".,")) }
             .filter { !$0.isEmpty }
     }
-
-    private func looksLikeIngredient(_ lower: String) -> Bool {
-        let units = [
-            "cup", "cups", "tbsp", "tablespoon", "tablespoons",
-            "tsp", "teaspoon", "teaspoons", "oz", "ounce", "ounces",
-            "lb", "pound", "pounds", "gram", "grams", "g "
-        ]
-
-        let ingredientWords = [
-            "salt", "pepper", "oil", "butter", "garlic", "onion",
-            "chicken", "beef", "pork", "shrimp", "salmon", "cheese",
-            "cream", "milk", "flour", "sugar", "rice", "pasta",
-            "tomato", "sauce", "egg", "eggs"
-        ]
-
-        return lower.range(of: #"(^|\s)\d+([\/.]\d+)?\s"#, options: .regularExpression) != nil
-        || units.contains(where: { lower.contains($0) })
-        || ingredientWords.contains(where: { lower.contains($0) })
-    }
-
-    private func looksLikeInstruction(_ lower: String) -> Bool {
-        let verbs = [
-            "add", "mix", "stir", "cook", "bake", "fry", "saute",
-            "sauté", "boil", "simmer", "season", "chop", "slice",
-            "dice", "pour", "combine", "whisk", "serve", "heat",
-            "preheat", "broil", "roast", "grill", "melt", "drain"
-        ]
-
-        return verbs.contains(where: { lower.hasPrefix($0) || lower.contains(" \($0) ") })
-    }
-
-    private func cleanIngredient(_ line: String) -> String {
-        line
-            .replacingOccurrences(of: "-", with: "")
-            .replacingOccurrences(of: "•", with: "")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-    }
-
-    private func cleanInstruction(_ line: String) -> String {
+    
+    private func cleanMarkdown(_ line: String) -> String {
         var cleaned = line.trimmingCharacters(in: .whitespacesAndNewlines)
-
-        cleaned = cleaned.replacingOccurrences(
-            of: #"^\d+\.\s*"#,
-            with: "",
-            options: .regularExpression
-        )
-
+        
+        while cleaned.hasPrefix("#") {
+            cleaned.removeFirst()
+        }
+        
+        cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        cleaned = cleaned.replacingOccurrences(of: "**", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "__", with: "")
+        cleaned = cleaned.replacingOccurrences(of: "`", with: "")
+        
+        return cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+    
+    private func isIngredientGroupHeader(_ line: String) -> Bool {
+        let cleaned = cleanMarkdown(line)
+        return cleaned.hasSuffix(":") && cleaned.count < 40
+    }
+    
+    private func looksLikeIngredient(_ lower: String) -> Bool {
+        if lower.contains("cup") { return true }
+        if lower.contains("tbsp") { return true }
+        if lower.contains("tsp") { return true }
+        if lower.contains("oz") { return true }
+        if lower.contains("lb") { return true }
+        if lower.contains("gram") { return true }
+        if lower.contains("ml") { return true }
+        
+        if lower.contains("salt") { return true }
+        if lower.contains("pepper") { return true }
+        if lower.contains("oil") { return true }
+        if lower.contains("butter") { return true }
+        if lower.contains("garlic") { return true }
+        if lower.contains("chicken") { return true }
+        if lower.contains("cheese") { return true }
+        if lower.contains("cream") { return true }
+        if lower.contains("pasta") { return true }
+        if lower.contains("tomato") { return true }
+        if lower.contains("sauce") { return true }
+        
+        return false
+    }
+    
+    private func looksLikeInstruction(_ lower: String) -> Bool {
+        if lower.first?.isNumber == true { return true }
+        
+        if lower.contains("cook") { return true }
+        if lower.contains("bake") { return true }
+        if lower.contains("stir") { return true }
+        if lower.contains("mix") { return true }
+        if lower.contains("heat") { return true }
+        if lower.contains("combine") { return true }
+        if lower.contains("preheat") { return true }
+        if lower.contains("add") { return true }
+        if lower.contains("pour") { return true }
+        if lower.contains("melt") { return true }
+        if lower.contains("serve") { return true }
+        
+        return false
+    }
+    
+    private func cleanIngredient(_ line: String) -> String {
+        var cleaned = cleanMarkdown(line)
+        
+        while cleaned.hasPrefix("-") || cleaned.hasPrefix("•") {
+            cleaned.removeFirst()
+            cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        
         return cleaned
+    }
+    
+    private func cleanInstruction(_ line: String) -> String {
+        var cleaned = cleanMarkdown(line)
+        
+        while cleaned.first?.isNumber == true ||
+                cleaned.hasPrefix(".") ||
+                cleaned.hasPrefix("-") {
+            cleaned.removeFirst()
+            cleaned = cleaned.trimmingCharacters(in: .whitespacesAndNewlines)
+        }
+        
+        return cleaned
+    }
+    
+    private func isJunkLine(_ lower: String) -> Bool {
+        if lower.contains("app store") { return true }
+        if lower.contains("google play") { return true }
+        if lower.contains("link in my bio") { return true }
+        if lower.contains("save unlimited recipes") { return true }
+        if lower.contains("follow") { return true }
+        if lower.contains("subscribe") { return true }
+        if lower.contains("tiktok") { return true }
+        if lower.contains("instagram") { return true }
+        if lower.contains("@") { return true }
+        if lower.contains("comment") { return true }
+        if lower.contains("like") { return true }
+        if lower.contains("share") { return true }
+        
+        return false
+    }
+    
+    private func uniqueClean(_ items: [String]) -> [String] {
+        var seen = Set<String>()
+        var result: [String] = []
+        
+        for item in items {
+            let cleaned = item.trimmingCharacters(in: .whitespacesAndNewlines)
+            let key = cleaned.lowercased()
+            
+            if cleaned.isEmpty { continue }
+            if seen.contains(key) { continue }
+            
+            seen.insert(key)
+            result.append(cleaned)
+        }
+        
+        return result
     }
 }

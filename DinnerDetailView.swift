@@ -1,4 +1,5 @@
 import SwiftUI
+import AVFoundation
 
 struct DinnerDetailView: View {
     
@@ -9,6 +10,8 @@ struct DinnerDetailView: View {
     @State private var cookStepIndex = 0
     
     @State private var selectedGroceryItems: Set<String> = []
+    @State private var speaker = AVSpeechSynthesizer()
+    @State private var dinnerComplete = false
     
     
     var body: some View {
@@ -44,9 +47,43 @@ struct DinnerDetailView: View {
     
     private var recipeView: some View {
         ScrollView {
-            Text(dinner.recipeText)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding()
+            
+            VStack(alignment: .leading, spacing: 24) {
+                
+                Text("Ingredients")
+                    .font(.title2.bold())
+                
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(dinner.ingredients, id: \.self) { item in
+                        Label(item, systemImage: "circle.fill")
+                            .font(.body)
+                    }
+                }
+                
+                Divider()
+                
+                Text("Instructions")
+                    .font(.title2.bold())
+                
+                VStack(alignment: .leading, spacing: 16) {
+                    
+                    ForEach(
+                        Array(dinner.instructions.enumerated()),
+                        id: \.offset
+                    ) { index, step in
+                        
+                        HStack(alignment: .top) {
+                            
+                            Text("\(index + 1)")
+                                .font(.headline)
+                                .frame(width: 28)
+                            
+                            Text(step)
+                        }
+                    }
+                }
+            }
+            .padding()
         }
     }
     
@@ -114,21 +151,84 @@ struct DinnerDetailView: View {
     
     private var cookModeView: some View {
         VStack(spacing: 25) {
+            
             if dinner.instructions.isEmpty {
+                
                 Text("No instructions found.")
                     .foregroundStyle(.secondary)
+                
+            } else if dinnerComplete {
+                
+                VStack(spacing: 20) {
+                    Text("🎉")
+                        .font(.system(size: 70))
+                    
+                    Text("Dinner Complete")
+                        .font(.largeTitle.bold())
+                    
+                    Text("Enjoy your meal!")
+                        .foregroundStyle(.secondary)
+                    
+                    Button("Cook Again") {
+                        cookStepIndex = 0
+                        dinnerComplete = false
+                    }
+                    .buttonStyle(.borderedProminent)
+                    
+                    Button("Back To Recipe") {
+                        selectedTab = 0
+                        cookStepIndex = 0
+                        dinnerComplete = false
+                    }
+                    .buttonStyle(.bordered)
+                }
+                
             } else {
+                
                 Text("Step \(cookStepIndex + 1) of \(dinner.instructions.count)")
                     .font(.headline)
                 
+                ProgressView(
+                    value: Double(cookStepIndex + 1),
+                    total: Double(dinner.instructions.count)
+                )
+                .padding(.horizontal)
+                
                 Text(dinner.instructions[cookStepIndex])
-                    .font(.largeTitle)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 44, weight: .bold))
                     .multilineTextAlignment(.center)
                     .padding()
-                    .minimumScaleFactor(0.6)
+                    .minimumScaleFactor(0.5)
+                    .gesture(
+                        DragGesture()
+                            .onEnded { value in
+                                
+                                if value.translation.width < -50 {
+                                    
+                                    if cookStepIndex < dinner.instructions.count - 1 {
+                                        cookStepIndex += 1
+                                    } else {
+                                        dinnerComplete = true
+                                    }
+                                }
+                                
+                                if value.translation.width > 50 {
+                                    
+                                    if cookStepIndex > 0 {
+                                        cookStepIndex -= 1
+                                    }
+                                }
+                            }
+                    )
                 
                 HStack {
+                    Button {
+                        readCurrentStep()
+                    } label: {
+                        Label("Read Step", systemImage: "speaker.wave.2.fill")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    
                     Button("Back") {
                         if cookStepIndex > 0 {
                             cookStepIndex -= 1
@@ -136,14 +236,15 @@ struct DinnerDetailView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .disabled(cookStepIndex == 0)
-
+                    
                     Button("Next") {
                         if cookStepIndex < dinner.instructions.count - 1 {
                             cookStepIndex += 1
+                        } else {
+                            dinnerComplete = true
                         }
                     }
                     .buttonStyle(.borderedProminent)
-                    .disabled(cookStepIndex >= dinner.instructions.count - 1)
                 }
                 .padding()
             }
@@ -159,6 +260,22 @@ struct DinnerDetailView: View {
         }
         
         store.update(dinner)
+    }
+    
+    private func readCurrentStep() {
+        guard !dinner.instructions.isEmpty else { return }
+        
+        if speaker.isSpeaking {
+            speaker.stopSpeaking(at: .immediate)
+        }
+        
+        let text = dinner.instructions[cookStepIndex]
+        let utterance = AVSpeechUtterance(string: text)
+        utterance.rate = 0.48
+        utterance.pitchMultiplier = 1.0
+        utterance.volume = 1.0
+        
+        speaker.speak(utterance)
     }
     
     private func groceryListText() -> String {
