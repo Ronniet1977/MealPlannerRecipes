@@ -46,63 +46,53 @@ struct VideoImporterView: View {
                 }
                 .padding(.top, 20)
                 
-                VStack(spacing: 14) {
-                    PhotosPicker(
-                        selection: $selectedItem,
-                        matching: .videos,
-                        photoLibrary: .shared()
-                    ) {
-                        Label("Choose Recipe Video", systemImage: "video.fill")
-                            .frame(maxWidth: .infinity)
+                if recipeOutput.isEmpty {
+                    VStack(spacing: 14) {
+                        PhotosPicker(
+                            selection: $selectedItem,
+                            matching: .videos,
+                            photoLibrary: .shared()
+                        ) {
+                            Label("Choose Recipe Video", systemImage: "video.fill")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.borderedProminent)
+                        
+                        Button {
+                            showReelHelp = true
+                        } label: {
+                            Label("Using TikTok or Facebook?", systemImage: "heart.circle.fill")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        
+                        Button {
+                            showPasteSheet = true
+                        } label: {
+                            Label("Paste Recipe Text", systemImage: "doc.on.clipboard")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        
+                        Button {
+                            resetDinner()
+                        } label: {
+                            Label("Start New Dinner", systemImage: "sparkles")
+                                .frame(maxWidth: .infinity)
+                        }
+                        .buttonStyle(.bordered)
+                        .tint(.pink)
                     }
-                    .buttonStyle(.borderedProminent)
-                    
-                    Button {
-                        showReelHelp = true
-                    } label: {
-                        Label("Using TikTok or Facebook?", systemImage: "heart.circle.fill")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    
-                    Button {
-                        showPasteSheet = true
-                    } label: {
-                        Label("Paste Recipe Text", systemImage: "doc.on.clipboard")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    
-                    Button {
-                        resetDinner()
-                    } label: {
-                        Label("Start New Dinner", systemImage: "sparkles")
-                            .frame(maxWidth: .infinity)
-                    }
-                    .buttonStyle(.bordered)
-                    .tint(.pink)
-                }
-                .padding()
-                .background(.thinMaterial)
-                .clipShape(RoundedRectangle(cornerRadius: 24))
-                
-                if !importMessage.isEmpty {
-                    Text(importMessage)
-                        .font(.footnote)
-                        .foregroundStyle(.secondary)
-                        .multilineTextAlignment(.center)
+                    .padding()
+                    .background(.thinMaterial)
+                    .clipShape(RoundedRectangle(cornerRadius: 24))
                 }
                 
-                if let url = selectedVideoURL {
+                if let url = selectedVideoURL, recipeOutput.isEmpty {
                     VStack(spacing: 12) {
-                        Text("Video Ready")
+                        Label("Recipe video selected", systemImage: "checkmark.circle.fill")
                             .font(.headline)
                             .foregroundStyle(.green)
-                        
-                        Text(url.lastPathComponent)
-                            .font(.caption)
-                            .foregroundStyle(.blue)
-                            .multilineTextAlignment(.center)
                         
                         Button(isScanning ? "Scanning..." : "Scan Video") {
                             scanVideo(url: url)
@@ -115,7 +105,7 @@ struct VideoImporterView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 20))
                 }
                 
-                if !extractedText.isEmpty {
+                if !extractedText.isEmpty && recipeOutput.isEmpty {
                     Button(isBuildingRecipe ? "Making Dinner..." : "Make Recipe") {
                         makeRecipe()
                     }
@@ -131,11 +121,21 @@ struct VideoImporterView: View {
                     ProgressView("Creating dinner...")
                 }
                 
-                extractedTextView
-                
                 if !recipeOutput.isEmpty {
                     recipeResultView
+                    
+                    Button {
+                        resetDinner()
+                    } label: {
+                        Label("Make Another Recipe", systemImage: "arrow.clockwise")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .tint(.pink)
                 }
+                
+                //DEBUG
+                //extractedTextView
+                
             }
             .padding()
         }
@@ -391,6 +391,8 @@ struct VideoImporterView: View {
                     await MainActor.run {
                         recipeOutput = result
                         isBuildingRecipe = false
+                        selectedVideoURL = nil
+                        selectedItem = nil
                         
                         if selectedPhotoAssetIdentifier != nil {
                             showVideoFinishedAlert = true
@@ -402,6 +404,8 @@ struct VideoImporterView: View {
                     await MainActor.run {
                         recipeOutput = fallback
                         isBuildingRecipe = false
+                        selectedVideoURL = nil
+                        selectedItem = nil
                     }
                 }
             } catch {

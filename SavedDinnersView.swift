@@ -77,6 +77,12 @@ struct SavedDinnersView: View {
             .padding(.vertical, 6)
         }
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
+            Button(role: .destructive) {
+                store.delete(dinner)
+            } label: {
+                Label("Delete", systemImage: "trash")
+            }
+            
             Button {
                 shareText = groceryText(from: dinner)
                 showShareSheet = true

@@ -11,6 +11,7 @@ struct DinnerPlannerView: View {
     @AppStorage("weeklyMealPlanData") private var weeklyPlanData = Data()
     
     @State private var weeklyPlan: [String: PlannedMeal] = [:]
+    @FocusState private var isTyping: Bool
     
     private let days = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
     
@@ -77,6 +78,11 @@ struct DinnerPlannerView: View {
             
             TextField("Or type something simple, like tacos", text: manualMealBinding(for: day))
                 .textFieldStyle(.roundedBorder)
+                .focused($isTyping)
+                .submitLabel(.done)
+                .onSubmit {
+                    isTyping = false
+                }
             
             if let dinner = dinnerFor(day) {
                 NavigationLink {
